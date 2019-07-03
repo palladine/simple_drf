@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.http import HttpResponse
 from api.models import Author, Book
 from api.serializers import AuthorsSerializator, BooksSerializator
 from rest_framework.views import APIView
@@ -23,7 +24,7 @@ class AuthorsView(APIView):
 
         return Response(data)
 
-
+    # create new author
     def post(self, request, format=None):
         serializator = AuthorsSerializator(data=request.data)
         if serializator.is_valid():
@@ -47,9 +48,26 @@ class BooksView(APIView):
 
         return Response(data)
 
+    # create new book
     def post(self, request, format=None):
         serializator = BooksSerializator(data=request.data)
         if serializator.is_valid():
             serializator.save()
             return Response(serializator.data, status=status.HTTP_201_CREATED)
         return Response(serializator.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class BookDetailView(APIView):
+
+    # get book info by id
+    def get(self, request, book_id):
+
+        try:
+            book = Book.objects.get(pk=book_id)
+        except Book.DoesNotExist:
+            return HttpResponse(status=404)
+
+        serializator = BooksSerializator(book)
+
+        return Response(serializator.data)
